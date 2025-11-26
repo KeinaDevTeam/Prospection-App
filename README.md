@@ -10,34 +10,37 @@ Serveur local (bridge) pour créer des contacts dans Odoo
 
 J'ai ajouté un petit serveur Flask (`server.py`) qui sert la page statique et expose une API `POST /api/contacts` qui crée un contact dans le module Contacts (`res.partner`) d'Odoo via XML-RPC.
 
-Prérequis : Python 3.8+ et variables d'environnement configurées :
+Prérequis : Python 3.8+ et variables d'environnement configurées (via `.env`) :
 
 	- `ODOO_URL` (ex: `https://yourcompany.odoo.com`)
 	- `ODOO_DB` (nom de la base)
 	- `ODOO_USER` (login/email)
 	- `ODOO_PASSWORD` (mot de passe ou API key)
 
-Installation et exécution (PowerShell) :
+Installation et exécution :
 
-```powershell
-# Créer un environnement virtuel
+```bash
+# Créer un environnement virtuel (Linux/macOS/PowerShell)
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+source .venv/bin/activate        # PowerShell : .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-# Définir variables d'environnement (exemple)
-$env:ODOO_URL = 'https://aniekgroup.odoo.com'
-$env:ODOO_DB = ''
-$env:ODOO_USER = 'user@example.com'
-$env:ODOO_PASSWORD = 'your-api-key-or-password'
+# Copier .env (jamais commité) et remplir :
+cat <<'EOF' > .env
+ODOO_URL="https://aniekgroup.odoo.com"
+ODOO_DB="nom_de_base"
+ODOO_USER="user@example.com"
+ODOO_PASSWORD="your-api-key-or-password"
+PORT=5000
+EOF
 
-# Lancer le serveur
+# Lancer le serveur Flask (sert la SPA + expose /api/contacts)
 python server.py
 
-# Ouvrez ensuite http://127.0.0.1:5000
+# Le formulaire est disponible sur http://127.0.0.1:5000
 ```
 
-Fonctionnement : le formulaire poste en JSON vers `/api/contacts`. Le serveur crée un `res.partner` avec les champs `name`, `phone`, `email`, `street` (adresse) et `country_id` si le nom du pays est retrouvé.
+Fonctionnement : le formulaire poste en JSON vers `/api/contacts`. Le serveur (bridge) valide les champs, prépare la charge utile puis crée un `res.partner` dans Odoo avec `name`, `phone`, `email`, `street` (adresse), `country_id` (recherche par nom) et les commentaires.
 
 Sécurité et bonnes pratiques :
 

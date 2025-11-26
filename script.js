@@ -1,38 +1,93 @@
 (function () {
   const form = document.getElementById('contactForm');
   const msg = document.getElementById('formMessage');
+  const phoneSelect = document.getElementById('phoneCode');
 
-  // Transform phoneCode options to show: <flag> <code> <ISO>
-  (function shortenPhoneOptions() {
-    const sel = document.getElementById('phoneCode');
-    if (!sel) return;
-    function flagToISO(flag) {
-      // flag is two regional indicator symbols; convert to ISO alpha-2
-      const it = [...flag];
-      if (it.length < 2) return '';
-      const a = it[0].codePointAt(0) - 0x1F1E6;
-      const b = it[1].codePointAt(0) - 0x1F1E6;
-      if (a < 0 || b < 0) return '';
-      return String.fromCharCode(65 + a) + String.fromCharCode(65 + b);
-    }
+  const COUNTRY_PLACEHOLDER = 'Sélectionnez un pays';
 
-    for (const opt of Array.from(sel.options)) {
+  function flagToISO(flag) {
+    const it = [...flag];
+    if (it.length < 2) return '';
+    const a = it[0].codePointAt(0) - 0x1F1E6;
+    const b = it[1].codePointAt(0) - 0x1F1E6;
+    if (a < 0 || b < 0) return '';
+    return String.fromCharCode(65 + a) + String.fromCharCode(65 + b);
+  }
+
+  function enhancePhoneOptions() {
+    if (!phoneSelect) return [];
+    const countries = [];
+    let defaultIndex = -1;
+    Array.from(phoneSelect.options).forEach((opt, idx) => {
       const raw = opt.textContent.trim();
-      // Expect format: "<flag> <code> <Country name>"
-      const parts = raw.split(/\s+/);
-      if (parts.length < 2) continue;
-      const possibleFlag = parts[0];
-      const possibleCode = parts[1];
+      const match = raw.match(/^([\p{RI}]{2})\s+(\+\d+)\s+(.+)$/u);
+      const flag = match ? match[1] : '';
+      const dial = match ? match[2] : (opt.value || '');
+      const name = match ? match[3] : raw;
       let iso = '';
-      try { iso = flagToISO(possibleFlag); } catch (e) { iso = ''; }
-      if (!iso) {
-        // fallback: take first two letters of country name
-        const name = parts.slice(2).join(' ');
-        iso = name ? name.slice(0,2).toUpperCase() : '';
+      try { iso = flagToISO(flag); } catch (e) { iso = ''; }
+      if (!iso && name) {
+        iso = name.slice(0, 2).toUpperCase();
       }
-      opt.textContent = `${possibleFlag} ${possibleCode} ${iso}`;
+      opt.textContent = `${flag} ${dial} ${iso}`.trim();
+      opt.value = dial;
+      if (name) opt.dataset.countryName = name;
+      if (iso) {
+        opt.dataset.iso = iso;
+        countries.push({ iso, name });
+        if (iso === 'TG') {
+          defaultIndex = idx;
+        }
+      }
+    });
+
+    if (defaultIndex >= 0) {
+      phoneSelect.selectedIndex = defaultIndex;
     }
-  })();
+
+    return countries;
+  }
+
+  function populateCountrySelect(countryEntries) {
+    const sel = document.getElementById('country');
+    if (!sel || !countryEntries.length) return;
+    const unique = new Map();
+    for (const entry of countryEntries) {
+      if (entry.iso && entry.name && !unique.has(entry.iso)) {
+        unique.set(entry.iso, entry.name);
+      }
+    }
+
+    const items = Array.from(unique.entries()).sort((a, b) =>
+      a[1].localeCompare(b[1], 'fr', { sensitivity: 'base' })
+    );
+
+    const frag = document.createDocumentFragment();
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = COUNTRY_PLACEHOLDER;
+    frag.appendChild(placeholder);
+
+    let hasDefault = false;
+    for (const [iso, name] of items) {
+      const option = document.createElement('option');
+      option.value = iso;
+      option.textContent = name;
+      if (iso === 'TG') {
+        option.selected = true;
+        hasDefault = true;
+      }
+      frag.appendChild(option);
+    }
+
+    sel.innerHTML = '';
+    sel.appendChild(frag);
+    if (!hasDefault) {
+      sel.value = 'FR';
+    }
+  }
+
+  populateCountrySelect(enhancePhoneOptions());
 
   function setError(el, show) {
     if (show) el.classList.add('error'); else el.classList.remove('error');
@@ -53,6 +108,11 @@
     const email = form.email;
     const address = form.address;
     const country = form.country;
+    const selectedCountry = country && country.selectedOptions.length
+      ? country.selectedOptions[0]
+      : null;
+    const countryIso = selectedCountry ? selectedCountry.value : '';
+    const countryLabel = selectedCountry ? selectedCountry.textContent : '';
 
     let ok = true;
 
@@ -80,7 +140,8 @@
       // keep 'activities' for server compatibility (maps to partner.comment)
       activities: comments,
       comments: comments,
-      country: country.value,
+      country: countryLabel,
+      country_iso: countryIso,
       address: address ? address.value.trim() : ''
     };
 
