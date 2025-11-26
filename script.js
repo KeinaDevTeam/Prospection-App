@@ -68,18 +68,41 @@
       return;
     }
 
+    // collect interests checkboxes
+    const interests = Array.from(form.querySelectorAll('input[name="interests"]:checked')).map(i => i.value);
+    const comments = form.comments ? form.comments.value.trim() : '';
+
     const payload = {
       name: name.value.trim(),
       phone: (phoneCode && phoneCode.value ? phoneCode.value + ' ' : '') + phoneNumber.value.trim(),
       email: email.value.trim(),
-      activities: form.activities.value.trim(),
+      interests: interests,
+      // keep 'activities' for server compatibility (maps to partner.comment)
+      activities: comments,
+      comments: comments,
       country: country.value,
       address: address ? address.value.trim() : ''
     };
 
-    console.log('Formulaire soumis (simulation):', payload);
-    msg.className = '';
-    msg.textContent = 'Formulaire envoyé (simulation). Merci !';
-    form.reset();
+    // POST to server bridge which will create the contact in Odoo
+    fetch('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(async res => {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data && data.success) {
+        msg.className = 'successMessage';
+        msg.textContent = 'Contact créé (id ' + (data.id || '') + '). Merci !';
+        form.reset();
+      } else {
+        msg.className = 'errorMessage';
+        msg.textContent = (data && data.error) ? data.error : 'Échec lors de la création du contact.';
+      }
+    }).catch(err => {
+      console.error('Network error:', err);
+      msg.className = 'errorMessage';
+      msg.textContent = 'Erreur réseau lors de l’envoi. Vérifiez le serveur.';
+    });
   });
 })();

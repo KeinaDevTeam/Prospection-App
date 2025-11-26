@@ -242,8 +242,19 @@
       </div>
 
       <div class="field">
-        <label for="activities">Activités</label>
-        <textarea id="activities" name="activities" rows="3"></textarea>
+        <label id="interestsLabel">Centre d'intérêts</label>
+        <div class="checkbox-grid" role="group" aria-labelledby="interestsLabel">
+          <label class="checkbox-item"><input type="checkbox" name="interests" value="Anuba"> Anuba</label>
+          <label class="checkbox-item"><input type="checkbox" name="interests" value="Machine à café"> Machine à café</label>
+          <label class="checkbox-item"><input type="checkbox" name="interests" value="Odoo"> Odoo</label>
+          <label class="checkbox-item"><input type="checkbox" name="interests" value="APT"> APT</label>
+          <label class="checkbox-item"><input type="checkbox" name="interests" value="KBS"> KBS</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="comments">Commentaires</label>
+        <textarea id="comments" name="comments" rows="3" placeholder="Commentaires..."></textarea>
       </div>
 
       <div class="field">

@@ -95,3 +95,8 @@ form{background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,
 /* small aesthetic helpers */
 .field label small{font-weight:400; color:var(--muted)}
 
+/* checkbox grid for interests */
+.checkbox-grid{display:flex; flex-wrap:wrap; gap:10px}
+.checkbox-item{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; background:linear-gradient(180deg,#fff,#f7fff7); border:1px solid rgba(15,122,68,0.06); cursor:pointer}
+.checkbox-item input{width:auto}
+
