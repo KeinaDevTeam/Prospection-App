@@ -16,6 +16,7 @@ Prérequis : Python 3.8+ et variables d'environnement configurées (via `.env`) 
 	- `ODOO_DB` (nom de la base)
 	- `ODOO_USER` (login/email)
 	- `ODOO_PASSWORD` (mot de passe ou API key)
+	- `ALLOWED_ORIGINS` (optionnel, ex: `https://toncompte.github.io`)
 
 Installation et exécution :
 
@@ -40,7 +41,13 @@ python server.py
 # Le formulaire est disponible sur http://127.0.0.1:5000
 ```
 
-Fonctionnement : le formulaire poste en JSON vers `/api/contacts`. Le serveur (bridge) valide les champs, prépare la charge utile puis crée un `res.partner` dans Odoo avec `name`, `phone`, `email`, `street` (adresse), `country_id` (recherche par nom) et les commentaires.
+Déploiement statique (GitHub Pages) :
+
+1. Hébergez `server.py` sur Render/Railway/etc. et définissez `ALLOWED_ORIGINS` avec le domaine de votre front.
+2. Dans `config.js`, renseignez `window.APP_CONFIG.API_BASE_URL` avec l’URL publique de l’API (ex: `https://prospection-app.onrender.com`).
+3. Poussez `index.html`, `styles.css`, `config.js`, `script.js` sur GitHub. Activez GitHub Pages (branche `main`, dossier `/`).
+
+Fonctionnement : le formulaire poste en JSON vers `/api/contacts` (ou l’URL fournie dans `config.js`). Le serveur (bridge) valide les champs, prépare la charge utile puis crée un `res.partner` dans Odoo avec `name`, `phone`, `email`, `street`, `country_id` (recherche par code ISO ou nom) et les commentaires.
 
 Sécurité et bonnes pratiques :
 

@@ -1,4 +1,5 @@
 (function () {
+  const API_BASE = ((window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || '').replace(/\/$/, '');
   const form = document.getElementById('contactForm');
   const msg = document.getElementById('formMessage');
   const phoneSelect = document.getElementById('phoneCode');
@@ -146,7 +147,7 @@
     };
 
     // POST to server bridge which will create the contact in Odoo
-    fetch('/api/contacts', {
+    fetch(`${API_BASE}/api/contacts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

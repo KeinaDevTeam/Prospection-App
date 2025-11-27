@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 
@@ -35,6 +36,24 @@ app = Flask(
     __name__,
     static_folder=os.path.abspath(os.path.dirname(__file__)),
     static_url_path="",
+)
+
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+if allowed_origins_env.strip() == "*":
+    cors_origins = "*"
+else:
+    cors_origins = [
+        origin.strip()
+        for origin in allowed_origins_env.split(",")
+        if origin.strip()
+    ] or "*"
+
+CORS(
+    app,
+    resources={
+        r"/api/*": {"origins": cors_origins},
+        r"/health": {"origins": cors_origins},
+    },
 )
 @app.get("/")
 def serve_index():
